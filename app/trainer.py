@@ -134,7 +134,7 @@ class Trainer:
         measurements.columnconfigure(1, weight=1, uniform="metric")
         breath = tk.Frame(measurements, bg=CARD, padx=14, pady=8)
         breath.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
-        self.label(breath, "BREATHING RATE · CHEST BELT", 10, MUTED).pack(anchor="w")
+        self.label(breath, "BREATHING RATE · BELLY BELT", 10, MUTED).pack(anchor="w")
         self.breath_label = self.label(breath, "— breaths/min", 22, MINT)
         self.breath_label.pack(anchor="w")
         self.breath_status = self.label(breath, "Waiting for breathing belt", 9, MUTED)

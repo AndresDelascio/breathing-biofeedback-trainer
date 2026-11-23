@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760" role="img" aria-labelledby="title desc">
+  <title id="title">Breathing Biofeedback Trainer system overview</title>
+  <desc id="desc">Data flows from two sensors (MAX30102 pulse, GY-6500 belly tilt) into ESP32 firmware (beat detection, SpO2 estimate, breathing signal), over USB serial as JSON lines, into the Python desktop app (sources.py input, core.py signal processing, trainer.py window), which shows the pace guide, measured breathing rate, beat-to-beat heart rate and heart-rate swing, and records CSV. 22 automated tests pass; firmware compiles; not yet tested on hardware.</desc>
+  <defs>
+    <style>
+      text { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+      .h1 { font-size: 26px; font-weight: 700; fill: #0f172a; }
+      .sub { font-size: 15px; fill: #64748b; }
+      .col { font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+      .ct { font-size: 14.5px; font-weight: 600; fill: #0f172a; }
+      .cl { font-size: 12.5px; fill: #475569; }
+      .mono { font-family: Consolas, "SF Mono", Menlo, monospace; font-size: 12px; fill: #334155; }
+      .monob { font-family: Consolas, "SF Mono", Menlo, monospace; font-size: 14px; font-weight: 700; fill: #0f172a; }
+      .warn { font-size: 12.5px; font-style: italic; fill: #b45309; }
+      .chip { font-size: 12px; fill: #1e3a8a; }
+      .card { fill: #ffffff; stroke: #e2e8f0; }
+      .flow { fill: none; stroke: #94a3b8; stroke-width: 1.6; }
+      .w { fill: #ffffff; }
+      .wl { font-size: 12.5px; fill: #cbd5e1; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="1279" height="759" rx="16" fill="#ffffff" stroke="#e2e8f0"/>
+
+  <text x="40" y="56" class="h1">Breathing Biofeedback Trainer</text>
+  <text x="40" y="84" class="sub">System overview: everything that runs, from the sensors to the screen. Arrows show data flow.</text>
+
+  <!-- Column panels -->
+  <rect x="40" y="104" width="210" height="464" rx="14" fill="#f0fdfa" stroke="#ccfbf1"/>
+  <rect x="280" y="104" width="250" height="464" rx="14" fill="#fffbeb" stroke="#fef3c7"/>
+  <rect x="650" y="104" width="300" height="464" rx="14" fill="#eff6ff" stroke="#dbeafe"/>
+  <rect x="990" y="104" width="250" height="464" rx="14" fill="#f5f3ff" stroke="#ede9fe"/>
+  <text x="56" y="132" class="col" fill="#0d9488">1 · SENSORS</text>
+  <text x="296" y="132" class="col" fill="#d97706">2 · ESP32 FIRMWARE (C++)</text>
+  <text x="666" y="132" class="col" fill="#2563eb">3 · DESKTOP APP (PYTHON, TK)</text>
+  <text x="1006" y="132" class="col" fill="#7c3aed">4 · WHAT YOU GET</text>
+
+  <!-- 1 Sensors -->
+  <rect x="52" y="148" width="186" height="104" rx="10" class="card"/>
+  <rect x="52" y="160" width="3" height="80" rx="1.5" fill="#0d9488"/>
+  <text x="68" y="174" class="ct">MAX30102 pulse</text>
+  <text x="68" y="196" class="cl">Fingertip, red + infrared</text>
+  <text x="68" y="215" class="cl">100 samples/s</text>
+  <text x="68" y="236" class="mono">I²C 0x57</text>
+
+  <text x="145" y="273" class="cl" text-anchor="middle">shared I²C bus</text>
+  <text x="145" y="289" class="mono" text-anchor="middle">GPIO21 SDA · GPIO22 SCL</text>
+
+  <rect x="52" y="300" width="186" height="104" rx="10" class="card"/>
+  <rect x="52" y="312" width="3" height="80" rx="1.5" fill="#0d9488"/>
+  <text x="68" y="326" class="ct">GY-6500 motion</text>
+  <text x="68" y="348" class="cl">Strapped flat on the belly</text>
+  <text x="68" y="367" class="cl">Tilt, 25 samples/s</text>
+  <text x="68" y="388" class="mono">I²C 0x68</text>
+
+  <g opacity=".6">
+    <rect x="52" y="424" width="186" height="80" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-dasharray="4 4"/>
+    <text x="68" y="450" class="ct">Stretch cord</text>
+    <text x="68" y="470" class="cl">Optional trade study</text>
+    <text x="68" y="490" class="mono">ADC · GPIO34</text>
+  </g>
+
+  <!-- 2 Firmware -->
+  <rect x="292" y="148" width="226" height="96" rx="10" class="card"/>
+  <rect x="292" y="160" width="3" height="72" rx="1.5" fill="#d97706"/>
+  <text x="308" y="174" class="ct">Beat detection</text>
+  <text x="308" y="197" class="cl">Peak finder on infrared light</text>
+  <text x="308" y="217" class="cl">Keeps intervals 300–2000 ms</text>
+
+  <rect x="292" y="258" width="226" height="110" rx="10" class="card"/>
+  <rect x="292" y="270" width="3" height="86" rx="1.5" fill="#d97706"/>
+  <text x="308" y="284" class="ct">SpO₂ estimate</text>
+  <text x="308" y="307" class="cl">Maxim reference algorithm</text>
+  <text x="308" y="327" class="cl">100-sample window</text>
+  <text x="308" y="350" class="warn">Experimental, uncalibrated</text>
+
+  <rect x="292" y="382" width="226" height="150" rx="10" class="card"/>
+  <rect x="292" y="394" width="3" height="126" rx="1.5" fill="#d97706"/>
+  <text x="308" y="408" class="ct">Breathing signal</text>
+  <text x="308" y="431" class="cl">Tilt = atan2(ax, az) at 25 Hz</text>
+  <text x="308" y="451" class="cl">Minus a 30 s posture baseline</text>
+  <text x="308" y="471" class="cl">Re-centres on posture change</text>
+  <text x="308" y="502" class="mono">resp_raw = 2048 + 200/°</text>
+
+  <!-- Sensor to firmware arrows -->
+  <path d="M238,196 L290,196" class="flow" marker-end="url(#arrow)"/>
+  <path d="M238,214 C266,214 262,313 290,313" class="flow" marker-end="url(#arrow)"/>
+  <path d="M238,352 C266,352 262,440 290,440" class="flow" marker-end="url(#arrow)"/>
+  <path d="M238,464 C266,464 262,470 290,470" class="flow" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+
+  <!-- USB link -->
+  <path d="M518,196 C534,196 526,292 540,292" class="flow" marker-end="url(#arrow)"/>
+  <path d="M518,313 C530,313 528,330 540,330" class="flow" marker-end="url(#arrow)"/>
+  <path d="M518,457 C534,457 526,368 540,368" class="flow" marker-end="url(#arrow)"/>
+  <rect x="542" y="250" width="96" height="160" rx="14" fill="#0f172a"/>
+  <text x="590" y="278" class="ct w" text-anchor="middle">USB serial</text>
+  <line x1="558" y1="292" x2="622" y2="292" stroke="#334155"/>
+  <text x="590" y="314" class="wl" text-anchor="middle">JSON line</text>
+  <text x="590" y="333" class="wl" text-anchor="middle">every 40 ms</text>
+  <text x="590" y="352" class="wl" text-anchor="middle">+ each beat</text>
+  <text x="590" y="388" class="mono" fill="#cbd5e1" text-anchor="middle" style="fill:#cbd5e1">115200 baud</text>
+  <path d="M638,330 C654,330 646,205 660,205" class="flow" marker-end="url(#arrow)"/>
+
+  <!-- 3 App -->
+  <rect x="662" y="148" width="276" height="114" rx="10" class="card"/>
+  <rect x="662" y="160" width="3" height="90" rx="1.5" fill="#2563eb"/>
+  <text x="678" y="174"><tspan class="monob">sources.py</tspan><tspan class="cl" dx="8">input</tspan></text>
+  <text x="678" y="197" class="cl">SerialSource: USB reader thread</text>
+  <text x="678" y="217" class="cl">Strict protocol parser</text>
+  <text x="678" y="242" class="cl">DemoSource: simulated, always labelled</text>
+
+  <path d="M800,262 L800,288" class="flow" marker-end="url(#arrow)"/>
+  <text x="812" y="280" class="mono" style="font-size:11px">queue, 512 events</text>
+
+  <rect x="662" y="290" width="276" height="150" rx="10" class="card"/>
+  <rect x="662" y="302" width="3" height="126" rx="1.5" fill="#2563eb"/>
+  <text x="678" y="316"><tspan class="monob">core.py</tspan><tspan class="cl" dx="8">pure, unit-tested</tspan></text>
+  <text x="678" y="343" class="mono">DeviceClock</text><text x="782" y="343" class="cl">device → host time</text>
+  <text x="678" y="366" class="mono">PulseTracker</text><text x="782" y="366" class="cl">heart rate per beat</text>
+  <text x="678" y="389" class="mono">BreathTracker</text><text x="782" y="389" class="cl">finds each breath</text>
+  <text x="678" y="412" class="mono">hr_swing</text><text x="782" y="412" class="cl">swing per breath</text>
+
+  <path d="M800,440 L800,458" class="flow" marker-end="url(#arrow)"/>
+
+  <rect x="662" y="460" width="276" height="94" rx="10" class="card"/>
+  <rect x="662" y="472" width="3" height="70" rx="1.5" fill="#2563eb"/>
+  <text x="678" y="486"><tspan class="monob">trainer.py</tspan><tspan class="cl" dx="8">Tk window</tspan></text>
+  <text x="678" y="509" class="cl">Updates every 40 ms</text>
+  <text x="678" y="530" class="cl">Guide · readings · 60 s chart · CSV</text>
+
+  <!-- App to outputs -->
+  <path d="M938,496 C966,496 972,282 1000,282" class="flow" marker-end="url(#arrow)"/>
+  <path d="M938,516 C966,516 972,493 1000,493" class="flow" marker-end="url(#arrow)"/>
+
+  <!-- 4 Outputs -->
+  <rect x="1002" y="148" width="226" height="268" rx="10" class="card"/>
+  <rect x="1002" y="160" width="3" height="244" rx="1.5" fill="#7c3aed"/>
+  <text x="1018" y="174" class="ct">On screen</text>
+  <circle cx="1022" cy="198" r="3.5" fill="#7c3aed"/>
+  <text x="1032" y="202" class="cl" style="fill:#0f172a;font-weight:600">Pace guide</text>
+  <text x="1032" y="220" class="cl">the target to follow</text>
+  <circle cx="1022" cy="246" r="3.5" fill="#7c3aed"/>
+  <text x="1032" y="250" class="cl" style="fill:#0f172a;font-weight:600">Measured breathing rate</text>
+  <text x="1032" y="268" class="cl">from the belt only</text>
+  <circle cx="1022" cy="294" r="3.5" fill="#7c3aed"/>
+  <text x="1032" y="298" class="cl" style="fill:#0f172a;font-weight:600">Beat-to-beat heart rate</text>
+  <text x="1032" y="316" class="cl">drawn over inhale bands</text>
+  <circle cx="1022" cy="342" r="3.5" fill="#7c3aed"/>
+  <text x="1032" y="346" class="cl" style="fill:#0f172a;font-weight:600">Heart-rate swing</text>
+  <text x="1032" y="364" class="cl">per breath (RSA)</text>
+  <text x="1018" y="398" class="cl" style="font-style:italic">Missing or stale data shows —</text>
+
+  <rect x="1002" y="432" width="226" height="122" rx="10" class="card"/>
+  <rect x="1002" y="444" width="3" height="98" rx="1.5" fill="#7c3aed"/>
+  <text x="1018" y="458" class="ct">CSV recording</text>
+  <text x="1018" y="481" class="cl">Raw readings per sample</text>
+  <text x="1018" y="501" class="cl">demo / live on every row</text>
+  <text x="1018" y="530" class="mono">sessions/*.csv</text>
+
+  <!-- Bottom strip: evidence -->
+  <rect x="40" y="592" width="760" height="132" rx="14" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="64" y="622" class="col" fill="#2563eb">CHECKED IN SOFTWARE</text>
+  <text x="64" y="684" style="font-size:46px;font-weight:700;fill:#2563eb">22</text>
+  <text x="64" y="708" class="cl">automated tests pass</text>
+  <g>
+    <rect x="220" y="640" width="116" height="28" rx="14" fill="#dbeafe"/><text x="278" y="658" class="chip" text-anchor="middle">Protocol parser</text>
+    <rect x="344" y="640" width="97" height="28" rx="14" fill="#dbeafe"/><text x="392.5" y="658" class="chip" text-anchor="middle">Guide timing</text>
+    <rect x="449" y="640" width="97" height="28" rx="14" fill="#dbeafe"/><text x="497.5" y="658" class="chip" text-anchor="middle">Device clock</text>
+    <rect x="554" y="640" width="167" height="28" rx="14" fill="#dbeafe"/><text x="637.5" y="658" class="chip" text-anchor="middle">Serial reader (loop://)</text>
+    <rect x="220" y="678" width="116" height="28" rx="14" fill="#dbeafe"/><text x="278" y="696" class="chip" text-anchor="middle">Breath detector</text>
+    <rect x="344" y="678" width="154" height="28" rx="14" fill="#dbeafe"/><text x="421" y="696" class="chip" text-anchor="middle">Synthetic stress gate</text>
+    <rect x="506" y="678" width="122" height="28" rx="14" fill="#dbeafe"/><text x="567" y="696" class="chip" text-anchor="middle">Heart-rate swing</text>
+    <rect x="636" y="678" width="122" height="28" rx="14" fill="#dbeafe"/><text x="697" y="696" class="chip" text-anchor="middle">GUI in demo mode</text>
+  </g>
+
+  <rect x="830" y="592" width="410" height="132" rx="14" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="854" y="622" class="col" fill="#475569">STATUS</text>
+  <circle cx="860" cy="652" r="5" fill="#16a34a"/>
+  <text x="874" y="656" class="cl" style="fill:#0f172a">Firmware compiles · 7% RAM, 23% flash</text>
+  <circle cx="860" cy="678" r="5" fill="#d97706"/>
+  <text x="874" y="682" class="cl" style="fill:#0f172a">Not yet tested on hardware or a person</text>
+  <circle cx="860" cy="704" r="5" fill="#94a3b8"/>
+  <text x="874" y="708" class="cl" style="fill:#0f172a">Educational prototype, not a medical device</text>
+</svg>

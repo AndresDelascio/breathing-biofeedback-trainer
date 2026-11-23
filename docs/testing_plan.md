@@ -31,7 +31,7 @@ Passing these tests verifies software behavior on synthetic inputs. It does **no
 
 ## Breathing-rate comparison
 
-Use comfortable normal or paced breathing, without forced deep breathing or breath holds. Count complete chest expansion/relaxation cycles for **60 seconds** independently of the guide. Wait for the belt calibration and three cycles before evaluating its displayed value. Repeat at several comfortable rates and after re-fitting the belt.
+Use comfortable normal or paced breathing, without forced deep breathing or breath holds. Count complete breaths (belly rise and fall) for **60 seconds** independently of the guide. Wait for the belt calibration and three cycles before evaluating its displayed value. Repeat at several comfortable rates and after re-fitting the belt.
 
 For each trial record: duration, manual count, guide target (if used), displayed rate and its averaging delay, raw ADC range, fit, posture, movement and missing-reading periods. As a **proposed development target**, aim for agreement within **2 breaths/min at rest** after settling. This is an acceptance goal, not demonstrated accuracy. The display averages recent cycles; do not compare it with a single instantaneous breath immediately after changing pace. Investigate harmonics, missed cycles and motion-induced false breaths.
 

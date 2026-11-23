@@ -2,6 +2,8 @@
 
 A low-cost desktop trainer that paces your breathing and shows, breath by breath, how your heart rate responds. An ESP32 reads a fingertip pulse sensor and a motion sensor strapped to the belly and streams both to a Python app over USB. A built-in demo mode lets you try it before buying any parts.
 
+**Status:** software done and covered by 22 automated tests; ESP32 firmware compiles; not yet tested on hardware or a person.
+
 ![Application preview with simulated readings](docs/demo_preview.png)
 
 ## Try it on Windows (demo, no hardware)
@@ -31,15 +33,7 @@ This project shows the feedback that actually responds:
 
 ## Design
 
-```text
-MAX30102 (100 Hz red/IR) ─┐  shared I²C
-                          ├─ ESP32: beat detection, JSON lines ~25 Hz, 115200 baud ─┐
-GY-6500 belly tilt, 25 Hz ┘                                                         │
-                                                                                    ▼
- sources.py  reader thread → strict protocol parser → bounded queue (512)
- core.py     DeviceClock · PulseTracker · BreathTracker · hr_swing     (pure, unit-tested)
- trainer.py  Tk window, ticks every 40 ms: guide, readings, 60 s chart, CSV recording
-```
+![System overview: two sensors feed the ESP32 firmware, which streams JSON over USB to the Python app, which shows the guide, readings and chart and records CSV](docs/system_overview.svg)
 
 Main decisions and why:
 
