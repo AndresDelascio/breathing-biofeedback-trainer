@@ -1,0 +1,482 @@
+<title>Biofeedback Build Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* Layout: one bench-sheet column; diagrams full width, tables scroll sideways on phones. */
+:root {
+  --bg: #eef2f0; --surface: #ffffff; --ink: #16201c; --muted: #56645e; --line: #d3dbd7;
+  --accent: #0d7556; --accent-soft: #dcefe7; --board: #e3eae6; --module: #c4cfca; --cord: #3b4440;
+  --w-3v3: #cc2b2b; --w-gnd: #1b2220; --w-sda: #1f5fc4; --w-scl: #a87500; --w-sig: #d0601a;
+  --warn: #8a5a00; --warn-soft: #fbf0d9;
+  --f-head: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1513; --surface: #171f1c; --ink: #e4ebe7; --muted: #98a6a0; --line: #2b3732;
+  --accent: #3fc79b; --accent-soft: #173229; --board: #1e2925; --module: #34423c; --cord: #a9b5af;
+  --w-3v3: #ff6b6b; --w-gnd: #c8d2cd; --w-sda: #6ea4ff; --w-scl: #f0c23f; --w-sig: #ff9a52;
+  --warn: #f0c23f; --warn-soft: #2e2716; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1513; --surface: #171f1c; --ink: #e4ebe7; --muted: #98a6a0; --line: #2b3732;
+  --accent: #3fc79b; --accent-soft: #173229; --board: #1e2925; --module: #34423c; --cord: #a9b5af;
+  --w-3v3: #ff6b6b; --w-gnd: #c8d2cd; --w-sda: #6ea4ff; --w-scl: #f0c23f; --w-sig: #ff9a52;
+  --warn: #f0c23f; --warn-soft: #2e2716; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+.wrap > *, section > * { min-width: 0; } /* lets wide diagrams/tables scroll inside their box on phones */
+h1, h2 { font-family: var(--f-head); font-weight: 600; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+h2 { font-size: 1.45rem; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); }
+a:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: .9em; }
+section { display: grid; gap: 14px; min-width: 0; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+header { display: grid; gap: 12px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font: 500 12px/1 var(--f-mono); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); }
+.pill.warn { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.muted { color: var(--muted); }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; padding: 12px; }
+.fig svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.fig figcaption { font-size: 13px; color: var(--muted); padding: 6px 4px 0; }
+figure { margin: 0; }
+
+/* diagram parts */
+.board { fill: var(--board); stroke: var(--muted); stroke-width: 1.5; }
+.module { fill: var(--module); }
+.pin { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.win { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.wire { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.w3 { stroke: var(--w-3v3); } .wg { stroke: var(--w-gnd); } .wd { stroke: var(--w-sda); }
+.wc { stroke: var(--w-scl); } .ws { stroke: var(--w-sig); }
+.part { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cord { fill: none; stroke: var(--cord); stroke-width: 7; stroke-linecap: round; }
+.dot { fill: var(--ink); }
+.t-pin { font: 500 13px var(--f-mono); fill: var(--ink); }
+.t-lab { font: 12px var(--f-body); fill: var(--muted); }
+.t-title { font: 600 15px var(--f-head); fill: var(--ink); }
+.t-val { font: 500 12px var(--f-mono); fill: var(--ink); }
+.led-r { fill: #e0393e; } .led-ir { fill: var(--muted); }
+.strap { fill: var(--module); stroke: var(--muted); stroke-width: 1; }
+.bb { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.outline { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+.lead { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.desk { stroke: var(--muted); stroke-width: 2; }
+
+/* tables */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+tbody tr:last-child td { border-bottom: 0; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sw { display: inline-block; width: 22px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; }
+.conn { min-width: 560px; }
+.bom { min-width: 780px; }
+.bom td:first-child { width: 28px; }
+.bom input { width: 18px; height: 18px; accent-color: var(--accent); margin: 2px 0 0; }
+.bom .part-name { font-weight: 600; }
+.bom tr.done td { color: var(--muted); }
+.bom tr.done .part-name { text-decoration: line-through; }
+.bom .group td { background: var(--bg); font: 500 12px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.bom .links a { display: block; white-space: nowrap; }
+.tag { font: 500 11px var(--f-mono); color: var(--warn); }
+.opt { opacity: .45; } /* optional stretch-cord parts in the wiring diagram */
+.total { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; padding: 14px 16px;
+  background: var(--accent-soft); border-radius: 10px; }
+.total strong { font: 600 1.5rem var(--f-head); font-variant-numeric: tabular-nums; }
+#bought { font: 500 13px var(--f-mono); color: var(--accent); }
+
+/* lists */
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.checks li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.checks li > b:first-child { display: block; margin-bottom: 2px; }
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 72ch; }
+.steps li::marker { font-family: var(--f-mono); color: var(--accent); }
+.danger { border-left: 3px solid var(--w-3v3); padding: 10px 14px; background: var(--surface); border-radius: 0 8px 8px 0; max-width: 72ch; }
+footer { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Breathing Biofeedback Trainer · hardware</span>
+  <h1>Build guide: wiring, setup and shopping list</h1>
+  <p class="muted">A four-stage build of the ESP32, the MAX30102 pulse sensor and a motion-sensor breathing belt. Each stage ends with evidence you can show. It follows <code>hardware/wiring.md</code> and <code>docs/budget.md</code> in the repo.</p>
+  <div class="pills">
+    <span class="pill">ESP32-WROOM-32</span>
+    <span class="pill">MAX30102 · I²C 0x57</span>
+    <span class="pill">GY-6500 · I²C 0x68</span>
+    <span class="pill warn">Nothing built yet · prices are estimates</span>
+  </div>
+</header>
+
+<section id="plan">
+  <span class="eyebrow">1 · Plan</span>
+  <h2>Four stages, each one ends with proof</h2>
+  <ul class="checks">
+    <li><b>Stage 1 · Bench build</b>ESP32 and MAX30102 joined by four wires, no belt. Set <code>BELT_SOURCE = BELT_NONE</code> in the firmware. <b>Proof:</b> a photo and a screen capture of the live heart-rate chart. Works with today's firmware.</li>
+    <li><b>Stage 2 · Steady finger</b>Hold the fingertip with a Velcro strap, then a 3D-printed cradle. <b>Proof:</b> the CAD model and pulse traces before and after.</li>
+    <li><b>Stage 3 · Motion-sensor belt</b>A GY-6500 (MPU-6500) on the belly, in a printed clip, sharing the same four I²C wires. <b>Proof:</b> breathing rate compared with your own 60-second counts. <span class="tag">Firmware written, not yet tested on hardware</span></li>
+    <li><b>Stage 4 · Reference comparison</b>Wear a chest-strap heart-rate monitor during sessions. <b>Proof:</b> an agreement plot (your build vs the strap) and an honest limits section. <span class="tag">Needs a way to log the strap's beat intervals; not set up yet</span></li>
+    <li><b>Optional · Stretch-cord trade study</b>Build the original stretch-cord belt too, measure its drift against the motion sensor, and pick the winner from your data.</li>
+  </ul>
+</section>
+
+<section id="wiring">
+  <span class="eyebrow">2 · Wiring</span>
+  <h2>Four wires to the pulse sensor; the motion sensor shares them</h2>
+  <p>Everything runs on <b>3.3 V</b> from the ESP32. USB from the computer powers the board and carries the data.</p>
+  <figure class="fig">
+    <svg viewBox="0 0 760 490" role="img" aria-labelledby="wd-t">
+      <title id="wd-t">Stage 1 wiring diagram. ESP32 GPIO21 to MAX30102 SDA, GPIO22 to SCL, 3V3 to VIN, GND to GND. Shown faded as optional: 3V3 through a stretch cord to GPIO34, which has a 10 kilo-ohm resistor and a 100 nanofarad capacitor to ground.</title>
+      <!-- ESP32 board -->
+      <text x="40" y="48" class="t-title">ESP32 DevKit</text>
+      <rect x="40" y="60" width="200" height="370" rx="10" class="board"/>
+      <rect x="56" y="78" width="100" height="84" rx="4" class="module"/>
+      <text x="106" y="116" class="t-val" text-anchor="middle">ESP32-</text>
+      <text x="106" y="132" class="t-val" text-anchor="middle">WROOM-32</text>
+      <text x="56" y="196" class="t-lab">original ESP32,</text>
+      <text x="56" y="212" class="t-lab">not C3 or S3</text>
+      <rect x="58" y="388" width="30" height="16" rx="3" class="pin"/><text x="73" y="420" class="t-lab" text-anchor="middle">EN</text>
+      <rect x="160" y="388" width="30" height="16" rx="3" class="pin"/><text x="175" y="420" class="t-lab" text-anchor="middle">BOOT</text>
+      <rect x="120" y="426" width="40" height="18" rx="3" class="pin"/>
+      <path d="M140 444 V466" class="wire wg" style="stroke-width:3"/>
+      <text x="150" y="472" class="t-lab">USB data cable → computer (power + data)</text>
+      <!-- ESP32 pins -->
+      <g class="t-pin" text-anchor="end">
+        <text x="226" y="115">GPIO21</text><text x="226" y="165">GPIO22</text><text x="226" y="235">3V3</text>
+        <text x="226" y="405">GND</text>
+      </g>
+      <!-- wires -->
+      <path d="M246 110 H520" class="wire wd"/>
+      <path d="M246 160 H520" class="wire wc"/>
+      <path d="M246 230 H520" class="wire w3"/>
+      <path d="M246 400 H505 V280 H520" class="wire wg"/>
+      <g>
+        <rect x="234" y="104" width="12" height="12" class="pin"/><rect x="234" y="154" width="12" height="12" class="pin"/>
+        <rect x="234" y="224" width="12" height="12" class="pin"/>
+        <rect x="234" y="394" width="12" height="12" class="pin"/>
+      </g>
+      <g class="opt"><!-- optional stretch-cord divider (trade study) -->
+      <text x="226" y="335" class="t-pin" text-anchor="end">GPIO34</text>
+      <rect x="234" y="324" width="12" height="12" class="pin"/>
+      <path d="M380 230 V250" class="wire w3"/>
+      <path d="M246 330 H440 V357" class="wire ws"/>
+      <path d="M380 382 V400 M440 367 V400" class="wire wg"/>
+      <path d="M380 315 V345" class="wire ws"/>
+      <!-- stretch cord -->
+      <path d="M380 250 q12 6.5 0 13 q-12 6.5 0 13 q12 6.5 0 13 q-12 6.5 0 13 q12 6.5 0 13" class="cord"/>
+      <text x="364" y="276" class="t-lab" text-anchor="end">stretch cord</text>
+      <text x="364" y="292" class="t-lab" text-anchor="end">(in the belt)</text>
+      <!-- resistor -->
+      <path d="M380 345 l8 4 l-16 6 l16 6 l-16 6 l16 6 l-16 6 l8 3" class="part"/>
+      <text x="366" y="362" class="t-val" text-anchor="end">R_fixed</text>
+      <text x="366" y="378" class="t-lab" text-anchor="end">10 kΩ to start</text>
+      <!-- capacitor -->
+      <path d="M424 357 H456 M424 367 H456" class="part" style="stroke-width:3"/>
+      <text x="462" y="360" class="t-val">100</text><text x="462" y="375" class="t-val">nF</text>
+      <circle cx="380" cy="230" r="5" class="dot"/><circle cx="380" cy="330" r="5" class="dot"/>
+      <circle cx="380" cy="400" r="5" class="dot"/><circle cx="440" cy="400" r="5" class="dot"/>
+      <text x="262" y="321" class="t-lab">belt signal</text>
+      <text x="390" y="321" class="t-lab">node</text>
+      <text x="300" y="452" class="t-val">optional: stretch-cord trade study</text>
+      </g>
+      <!-- wire labels -->
+      <text x="400" y="101" class="t-lab">I²C data</text>
+      <text x="400" y="151" class="t-lab">I²C clock</text>
+      <text x="270" y="221" class="t-lab">3.3 V</text>
+      <text x="400" y="221" class="t-lab">3.3 V supply</text>
+      <text x="262" y="391" class="t-lab">ground</text>
+      <!-- MAX30102 -->
+      <text x="520" y="68" class="t-title">MAX30102 breakout</text>
+      <rect x="520" y="80" width="190" height="250" rx="8" class="board"/>
+      <g>
+        <rect x="514" y="104" width="12" height="12" class="pin"/><rect x="514" y="154" width="12" height="12" class="pin"/>
+        <rect x="514" y="224" width="12" height="12" class="pin"/><rect x="514" y="274" width="12" height="12" class="pin"/>
+        <rect x="514" y="304" width="12" height="12" class="pin" style="stroke-dasharray:3 2"/>
+      </g>
+      <g class="t-pin"><text x="534" y="115">SDA</text><text x="534" y="165">SCL</text><text x="534" y="235">VIN</text><text x="534" y="285">GND</text></g>
+      <text x="572" y="235" class="t-lab">3.3 V in</text>
+      <text x="534" y="315" class="t-pin">INT</text><text x="568" y="315" class="t-lab">leave unconnected</text>
+      <rect x="610" y="110" width="76" height="52" rx="8" class="win"/>
+      <circle cx="630" cy="128" r="6" class="led-r"/><circle cx="630" cy="146" r="6" class="led-ir"/>
+      <rect x="652" y="126" width="22" height="22" rx="2" class="module"/>
+      <text x="648" y="180" class="t-lab" text-anchor="middle">LEDs + photodiode</text>
+      <text x="648" y="196" class="t-lab" text-anchor="middle">fingertip rests here</text>
+    </svg>
+    <figcaption>Stage 1: the four solid wires. The faded parts are only for the optional stretch-cord study. Drawn for clarity: pin order on your boards will differ, so match the <b>printed labels</b>, not the positions. Never use the ESP32's 5 V or VIN pin.</figcaption>
+  </figure>
+
+  <div class="scroll">
+    <table class="conn">
+      <thead><tr><th>ESP32 pin</th><th>Goes to</th><th>Wire</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">3V3</td><td>MAX30102 <code>VIN</code>; stage 3 adds GY-6500 <code>VCC</code></td><td><span class="sw" style="background:var(--w-3v3)"></span>red</td><td>Power, 3.3 V only</td></tr>
+        <tr><td class="mono">GND</td><td>MAX30102 <code>GND</code>; stage 3 adds GY-6500 <code>GND</code></td><td><span class="sw" style="background:var(--w-gnd)"></span>black</td><td>Common ground</td></tr>
+        <tr><td class="mono">GPIO21</td><td>MAX30102 <code>SDA</code>; stage 3 adds GY-6500 <code>SDA</code></td><td><span class="sw" style="background:var(--w-sda)"></span>blue</td><td>I²C data</td></tr>
+        <tr><td class="mono">GPIO22</td><td>MAX30102 <code>SCL</code>; stage 3 adds GY-6500 <code>SCL</code></td><td><span class="sw" style="background:var(--w-scl)"></span>yellow</td><td>I²C clock</td></tr>
+        <tr><td class="mono">—</td><td>MAX30102 <code>INT</code>; GY-6500 <code>AD0</code>, <code>NCS</code>, <code>INT</code>, <code>FSYNC</code>, <code>EDA</code>, <code>ECL</code></td><td class="muted">none</td><td>Not used. The firmware tries 0x68, then 0x69</td></tr>
+        <tr class="muted"><td class="mono">GPIO34</td><td>Optional cord study: other end of the stretch cord, plus 10 kΩ and 100 nF to GND</td><td><span class="sw" style="background:var(--w-sig)"></span>orange</td><td>Belt signal (ADC1, input only)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 760 330" role="img" aria-labelledby="bus-t">
+      <title id="bus-t">Stage 3 wiring. Four shared lines from the ESP32: 3V3, GND, SDA on GPIO21 and SCL on GPIO22. The MAX30102 and the GY-6500 each connect to all four lines. The GY-6500 sits on the belt at the end of a cable about one metre long.</title>
+      <text x="40" y="38" class="t-title">ESP32 DevKit</text>
+      <rect x="40" y="50" width="150" height="150" rx="10" class="board"/>
+      <g class="t-pin" text-anchor="end">
+        <text x="176" y="75">3V3</text><text x="176" y="105">GND</text><text x="176" y="135">GPIO21</text><text x="176" y="165">GPIO22</text>
+      </g>
+      <path d="M196 70 H720" class="wire w3"/>
+      <path d="M196 100 H720" class="wire wg"/>
+      <path d="M196 130 H720" class="wire wd"/>
+      <path d="M196 160 H720" class="wire wc"/>
+      <g>
+        <rect x="184" y="64" width="12" height="12" class="pin"/><rect x="184" y="94" width="12" height="12" class="pin"/>
+        <rect x="184" y="124" width="12" height="12" class="pin"/><rect x="184" y="154" width="12" height="12" class="pin"/>
+      </g>
+      <text x="726" y="74" class="t-lab">3.3 V</text><text x="726" y="104" class="t-lab">GND</text>
+      <text x="726" y="134" class="t-lab">SDA</text><text x="726" y="164" class="t-lab">SCL</text>
+      <!-- MAX30102 taps -->
+      <path d="M290 70 V240" class="wire w3"/><path d="M320 100 V240" class="wire wg"/>
+      <path d="M350 130 V240" class="wire wd"/><path d="M380 160 V240" class="wire wc"/>
+      <circle cx="290" cy="70" r="5" class="dot"/><circle cx="320" cy="100" r="5" class="dot"/>
+      <circle cx="350" cy="130" r="5" class="dot"/><circle cx="380" cy="160" r="5" class="dot"/>
+      <rect x="260" y="240" width="160" height="60" rx="8" class="board"/>
+      <g class="t-pin" text-anchor="middle" style="font-size:11px"><text x="290" y="258">VIN</text><text x="320" y="258">GND</text><text x="350" y="258">SDA</text><text x="380" y="258">SCL</text></g>
+      <text x="340" y="282" class="t-val" text-anchor="middle">MAX30102 · 0x57</text>
+      <text x="340" y="318" class="t-lab" text-anchor="middle">under the fingertip</text>
+      <!-- GY-6500 taps, long cable to the belt -->
+      <path d="M530 70 V240" class="wire w3"/><path d="M560 100 V240" class="wire wg"/>
+      <path d="M590 130 V240" class="wire wd"/><path d="M620 160 V240" class="wire wc"/>
+      <circle cx="530" cy="70" r="5" class="dot"/><circle cx="560" cy="100" r="5" class="dot"/>
+      <circle cx="590" cy="130" r="5" class="dot"/><circle cx="620" cy="160" r="5" class="dot"/>
+      <path d="M516 180 C 508 200, 508 214, 516 232" class="part" style="stroke-width:1.5"/>
+      <text x="504" y="204" class="t-lab" text-anchor="end">4-wire cable,</text>
+      <text x="504" y="220" class="t-lab" text-anchor="end">about 1 m, twisted</text>
+      <rect x="500" y="240" width="150" height="60" rx="8" class="board"/>
+      <g class="t-pin" text-anchor="middle" style="font-size:11px"><text x="530" y="258">VCC</text><text x="560" y="258">GND</text><text x="590" y="258">SDA</text><text x="620" y="258">SCL</text></g>
+      <text x="575" y="282" class="t-val" text-anchor="middle">GY-6500 · 0x68</text>
+      <text x="575" y="318" class="t-lab" text-anchor="middle">MPU-6500 board, on the belt</text>
+    </svg>
+    <figcaption>Stage 3: both sensors connect to the same four lines. A dot means connected; a crossing without a dot means not connected. The two addresses (0x57 and 0x68) don't clash. <b>Wire this only after the motion-sensor firmware exists.</b> ASSUMPTION: the bus works over about 1 m at the firmware's 400 kHz I²C speed. Test on the bench first; the new firmware may need 100 kHz.</figcaption>
+  </figure>
+
+  <p class="muted">Optional cord study, divider output: <code>V_ADC = 3.3 × R_fixed / (R_cord + R_fixed)</code>. Pick <code>R_fixed</code> close to the cord's relaxed resistance so the resting voltage sits around 1–2 V. Keep the resistor in place even with the cord unplugged, so GPIO34 never floats. Set <code>BELT_SOURCE = BELT_ADC</code> for this study.</p>
+</section>
+
+<section id="setup">
+  <span class="eyebrow">3 · Setup at the desk</span>
+  <h2>Belt on, fingertip down, laptop runs the app</h2>
+  <figure class="fig">
+    <svg viewBox="0 0 760 300" role="img" aria-labelledby="sd-t">
+      <title id="sd-t">Desk setup. From stage 3, the belt sits over clothing at the belly with the motion sensor in a printed clip, and a four-wire cable runs to the breadboard holding the ESP32. A fingertip is held on the MAX30102 by a strap or printed cradle. A USB cable runs to the laptop.</title>
+      <path d="M250 270 H740" class="desk"/>
+      <circle cx="130" cy="58" r="28" class="outline"/>
+      <path d="M70 270 V140 Q70 98 112 96 H148 Q190 98 190 140 V270" class="outline"/>
+      <rect x="68" y="192" width="124" height="14" rx="3" class="strap"/>
+      <rect x="150" y="186" width="36" height="26" rx="4" class="board"/>
+      <path d="M186 196 C 260 196, 300 234, 380 236" class="lead" style="stroke:var(--w-3v3)"/>
+      <path d="M186 200 C 259 201, 299 237, 380 238" class="lead" style="stroke:var(--w-sda)"/>
+      <path d="M186 204 C 258 206, 298 240, 380 240" class="lead" style="stroke:var(--w-scl)"/>
+      <path d="M186 208 C 257 211, 297 243, 380 242" class="lead" style="stroke:var(--w-gnd)"/>
+      <text x="206" y="166" class="t-lab">Stage 3: belt over clothing at the belly,</text>
+      <text x="206" y="182" class="t-lab">GY-6500 in a printed clip, 4-wire cable.</text>
+      <rect x="360" y="226" width="170" height="44" rx="4" class="bb"/>
+      <rect x="380" y="232" width="90" height="32" rx="3" class="board"/>
+      <text x="425" y="253" class="t-val" text-anchor="middle">ESP32</text>
+      <path d="M488 244 h22" class="part" style="stroke-width:5"/>
+      <path d="M560 254 H530 M560 258 H530 M560 262 H530 M560 266 H530" class="lead" style="stroke-width:1.5;stroke:var(--muted)"/>
+      <rect x="560" y="252" width="50" height="18" rx="3" class="board"/>
+      <rect x="553" y="234" width="70" height="17" rx="8.5" class="outline"/>
+      <text x="560" y="206" class="t-lab" text-anchor="middle">fingertip held by</text>
+      <text x="560" y="221" class="t-lab" text-anchor="middle">strap or cradle</text>
+      <rect x="652" y="196" width="86" height="58" rx="4" class="outline"/>
+      <path d="M640 256 H750 L744 268 H646 Z" class="outline"/>
+      <path d="M440 232 C 480 120, 600 120, 644 258" class="lead" style="stroke:var(--w-gnd)"/>
+      <text x="470" y="128" class="t-lab">USB data cable</text>
+      <text x="445" y="292" class="t-lab" text-anchor="middle">Breadboard: ESP32 + shared bus</text>
+      <text x="585" y="292" class="t-lab" text-anchor="middle">MAX30102</text>
+      <text x="695" y="292" class="t-lab" text-anchor="middle">Laptop runs the app</text>
+    </svg>
+    <figcaption>In stage 1 there is no belt and no breadboard: the MAX30102 connects straight to the ESP32. Keep the ESP32 on the desk, not hanging from the belt. Support your hand so the fingertip stays still, and shade the sensor from bright light.</figcaption>
+  </figure>
+</section>
+
+<section id="check">
+  <span class="eyebrow">4 · Before you order</span>
+  <h2>Easy to miss</h2>
+  <ul class="checks">
+    <li><b>Charge-only USB cables</b>Many cables carry power but no data, and no COM port appears. Use one you've synced a phone with.</li>
+    <li><b>USB driver</b>The board's USB chip is usually CP2102 or CH340. Windows 11 often installs it. If not, get it from <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers" target="_blank" rel="noopener">Silicon Labs</a> or <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank" rel="noopener">WCH</a>.</li>
+    <li><b>Loose headers</b>Cheap MAX30102 boards often ship with the pin header unsoldered. Buy pre-soldered or plan to borrow a soldering iron.</li>
+    <li><b>1.8 V pull-ups</b>Some MAX30102 boards pull SDA and SCL to 1.8 V. Buy one whose listing or schematic says 3.3 V I²C.</li>
+    <li><b>Breadboard width</b>Wide 38-pin ESP32 boards cover every free hole on one side of a standard breadboard. A 30-pin board, or two breadboards side by side, leaves room for wires.</li>
+    <li><b>GY-6500 on 3.3 V</b>Feed its <code>VCC</code> from 3V3, never 5 V. ASSUMPTION, not yet checked on this board: <code>NCS</code> is pulled high so the chip stays in I²C mode. If the firmware reports "GY-6500 not found", tie <code>NCS</code> to 3V3.</li>
+    <li><b>Belt cable</b>Use stranded wire, twist the four wires together, keep it near 1 m, and add strain relief at the clip so tugging doesn't pull on the pins.</li>
+    <li><b>3D printer access</b>Public libraries and makerspaces often print for the cost of filament. Measure your boards with calipers before modelling the cradle and clip.</li>
+    <li><b>Cord study only: measure resistance</b>Measure the cord segment with a multimeter. If it's far from 10 kΩ, swap in the resistor value closest to it. Rubber cord can't be soldered: use crimps or small alligator clips.</li>
+    <li><b>Upload stuck at "Connecting…"</b>Hold <b>BOOT</b> on the ESP32 while the upload starts. See <code>firmware/README.md</code>.</li>
+  </ul>
+</section>
+
+<section id="bom">
+  <span class="eyebrow">5 · Shopping list</span>
+  <h2>Bill of materials, by stage</h2>
+  <p class="muted">Prices are planning estimates in <b>US dollars</b> from <code>docs/budget.md</code> (updated November 21, 2026), not live quotes. Buy one stage at a time. Links are searches or product pages, so check the listing against "What to look for" before you buy. Tick items as they arrive; ticks stay in this browser only.</p>
+  <div class="scroll">
+    <table class="bom">
+      <thead><tr><th><span class="mono">✓</span></th><th>Part</th><th>What to look for</th><th>Qty</th><th>Estimate</th><th>Where to look</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="6">Stage 1 · Bench build · $9–20</td></tr>
+        <tr><td><input type="checkbox" id="b-esp32" aria-label="Bought ESP32 DevKit"></td>
+          <td class="part-name">ESP32 DevKit</td>
+          <td>Original ESP32 (WROOM-32 or WROOM-32E), USB port, headers already soldered. A 30-pin board fits one breadboard best.</td>
+          <td class="num">1</td><td class="num">$5–9</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=ESP32+WROOM-32+DevKit+30+pin" target="_blank" rel="noopener">Amazon.ca search</a><a href="https://www.digikey.ca/en/products/result?keywords=ESP32-DevKitC-32E" target="_blank" rel="noopener">DigiKey: official DevKitC</a></td></tr>
+        <tr><td><input type="checkbox" id="b-max" aria-label="Bought MAX30102 breakout"></td>
+          <td class="part-name">MAX30102 breakout</td>
+          <td>Pre-assembled board that states a 3.3 V supply <b>and</b> 3.3 V I²C logic. Skip listings that don't say.</td>
+          <td class="num">1</td><td class="num">$3–6</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=MAX30102+module+3.3V" target="_blank" rel="noopener">Amazon.ca search</a><a href="https://www.sparkfun.com/products/14045" target="_blank" rel="noopener">SparkFun MAX30105 board</a><span class="tag">ASSUMPTION: works unchanged (same library, 0x57)</span></td></tr>
+        <tr><td><input type="checkbox" id="b-jump" aria-label="Bought jumper wires"></td>
+          <td class="part-name">Jumper wires</td>
+          <td>Female-female for stage 1 (board to board, no breadboard). Male-male and male-female for stage 3. A mixed pack covers both.</td>
+          <td class="num">mixed pack</td><td class="num">$1–2</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=dupont+jumper+wires+assortment" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-usb" aria-label="Bought USB cable"></td>
+          <td class="part-name">USB data cable</td>
+          <td>Matches the board's port (micro-USB or USB-C). Must carry data. Reuse one if you have it.</td>
+          <td class="num">1</td><td class="num">$0–3</td>
+          <td class="links muted">Reuse</td></tr>
+        <tr class="group"><td colspan="6">Stage 2 · Steady finger · $1–2 plus printing</td></tr>
+        <tr><td><input type="checkbox" id="b-velcro" aria-label="Bought hook-and-loop strap"></td>
+          <td class="part-name">Hook-and-loop strap roll</td>
+          <td>Narrow Velcro strap to hold the fingertip on the sensor. The same roll closes the stage 3 belt.</td>
+          <td class="num">1 roll</td><td class="num">$1–2</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=hook+and+loop+cable+strap+roll" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-print" aria-label="Have 3D printer access"></td>
+          <td class="part-name">3D printing</td>
+          <td>Finger cradle (stage 2) and belt clip for the GY-6500 (stage 3). PLA or PETG is fine. CAD not drawn yet.</td>
+          <td class="num">2 parts</td><td class="num muted">not estimated</td>
+          <td class="links muted">Library or makerspace</td></tr>
+        <tr class="group"><td colspan="6">Stage 3 · Motion-sensor belt · $5–11 · firmware written, not hardware-tested</td></tr>
+        <tr><td><input type="checkbox" id="b-imu" aria-label="Have GY-6500 board"></td>
+          <td class="part-name">GY-6500 board (MPU-6500)</td>
+          <td>Accelerometer and gyro on I²C, address 0x68. Included in the ELEGOO ESP32 starter kit. A GY-521 (MPU-6050) is not a drop-in: it reports a different <code>WHO_AM_I</code>.</td>
+          <td class="num">1</td><td class="num">$2–4</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=GY-6500+MPU-6500" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-cable" aria-label="Bought 4-wire cable"></td>
+          <td class="part-name">4-wire belt cable</td>
+          <td>Stranded, about 1 m, 22–26 AWG. Four long jumper wires twisted together also work.</td>
+          <td class="num">1 m</td><td class="num">$1–3</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=4+conductor+stranded+wire+24+AWG" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-bb" aria-label="Bought breadboard"></td>
+          <td class="part-name">Breadboard</td>
+          <td>Full size, 830 tie-points. Joins both sensors to the same four ESP32 pins.</td>
+          <td class="num">1</td><td class="num">$1–2</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=830+point+breadboard" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-strap" aria-label="Bought elastic band"></td>
+          <td class="part-name">Elastic band</td>
+          <td>Soft, 3–5 cm wide, long enough to go around your waist. The Velcro roll closes it.</td>
+          <td class="num">1</td><td class="num">$1–2</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=elastic+band+sewing+5cm" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr class="group"><td colspan="6">Stage 4 · Reference · about $90, or borrow</td></tr>
+        <tr><td><input type="checkbox" id="b-ref" aria-label="Have chest-strap reference"></td>
+          <td class="part-name">Chest-strap heart-rate monitor</td>
+          <td>Must give <b>beat-to-beat (RR) intervals</b>, not just average heart rate. The Polar H10 is a common research reference. You also need a way to log its data; not set up yet.</td>
+          <td class="num">1</td><td class="num">≈$90</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=Polar+H10" target="_blank" rel="noopener">Amazon.ca search</a><span class="links muted">or borrow</span></td></tr>
+        <tr class="group"><td colspan="6">Optional · Stretch-cord trade study · $4–9</td></tr>
+        <tr><td><input type="checkbox" id="b-cord" aria-label="Bought stretch cord"></td>
+          <td class="part-name">Stretch cord</td>
+          <td>Conductive rubber cord whose resistance rises when stretched. A short segment is enough.</td>
+          <td class="num">1 segment</td><td class="num">$3–7</td>
+          <td class="links"><a href="https://www.adafruit.com/product/519" target="_blank" rel="noopener">Adafruit stretch sensor</a><a href="https://www.amazon.ca/s?k=conductive+rubber+cord+stretch+sensor" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-res" aria-label="Bought resistors"></td>
+          <td class="part-name">Resistors</td>
+          <td>10 kΩ to start, plus values near your cord's measured resistance. An assortment is easiest.</td>
+          <td class="num">1 set</td><td class="num" rowspan="2">$1–2<br><span class="muted">for both</span></td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=resistor+assortment+kit+1%2F4W" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-cap" aria-label="Bought capacitor"></td>
+          <td class="part-name">100 nF capacitor</td>
+          <td>Ceramic, marked <code>104</code>, 16 V or higher.</td>
+          <td class="num">1</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=100nF+ceramic+capacitor+104" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr><td><input type="checkbox" id="b-clip" aria-label="Bought clip leads"></td>
+          <td class="part-name">Clip leads or crimps</td>
+          <td>Small alligator clip leads, or the cord vendor's crimps. Used to connect the rubber cord.</td>
+          <td class="num">small set</td><td class="num muted">not estimated</td>
+          <td class="links"><a href="https://www.amazon.ca/s?k=mini+alligator+clip+test+leads" target="_blank" rel="noopener">Amazon.ca search</a></td></tr>
+        <tr class="group"><td colspan="6">Tools: borrow first</td></tr>
+        <tr><td><input type="checkbox" id="b-dmm" aria-label="Have multimeter"></td>
+          <td class="part-name">Multimeter</td>
+          <td>Checks for a 3V3-to-GND short before power-on. Also measures the cord in the optional study.</td>
+          <td class="num">1</td><td class="num muted">not estimated</td><td class="links muted">Borrow</td></tr>
+        <tr><td><input type="checkbox" id="b-iron" aria-label="Have soldering iron"></td>
+          <td class="part-name">Soldering iron</td>
+          <td>Only if a board's header arrives loose.</td>
+          <td class="num">1</td><td class="num muted">not estimated</td><td class="links muted">Borrow</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="total">
+    <span>Stages 1–3, planning estimate (USD)</span>
+    <strong>$15–33</strong>
+    <span id="bought" aria-live="polite">0 of 17 ticked</span>
+  </div>
+  <p class="muted">Excludes the stage 4 strap (about $90, or borrow one), the optional cord study ($4–9), shipping, tax, conversion to CAD, printing and tools. An electronics starter kit often covers the breadboard, jumper wires, resistors and capacitor in one box.</p>
+</section>
+
+<section id="power-on">
+  <span class="eyebrow">6 · First power-on</span>
+  <h2>Bring it up in this order</h2>
+  <div class="danger"><b>Never connect anything to 5 V or VIN on the ESP32.</b> Its GPIO pins are not 5 V tolerant.</div>
+  <ol class="steps">
+    <li>Wire everything with <b>USB unplugged</b>.</li>
+    <li>Set <code>BELT_SOURCE</code> near the top of <code>firmware/esp32_biofeedback/esp32_biofeedback.ino</code>: <code>BELT_NONE</code> for stage 1, the default <code>BELT_IMU</code> for stage 3, <code>BELT_ADC</code> for the cord study (pick <code>R_fixed</code> close to the measured cord resistance).</li>
+    <li>With the multimeter, check there is no short between 3V3 and GND.</li>
+    <li>Plug in USB and upload the firmware (<code>firmware/README.md</code> has Arduino IDE and PlatformIO steps).</li>
+    <li>Open Serial Monitor at <b>115200 baud</b>. Look for the ready message and JSON lines.</li>
+    <li>Check that <code>finger</code> changes when you touch the sensor. With the GY-6500 fitted, <code>resp_raw</code> sits near 2048 when still and moves smoothly as you breathe. Look for <code>GY-6500 ready at 0x68</code> at boot.</li>
+    <li><b>Close Serial Monitor</b>, start the app, pick the COM port and click <b>Connect USB</b>.</li>
+    <li>Sit still. Heart rate appears after three beats. Without a belt, breathing rate shows <code>—</code>; with the cord, it calibrates over about 20 seconds plus three full breaths.</li>
+  </ol>
+</section>
+
+<footer>
+  <span>Source of truth: <code>hardware/wiring.md</code>, <code>docs/budget.md</code> and <code>firmware/README.md</code>. Check each part against its supplier's schematic.</span>
+  <span>References: <a href="https://www.analog.com/media/en/technical-documentation/data-sheets/MAX30102.pdf" target="_blank" rel="noopener">MAX30102 datasheet</a> · <a href="https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf" target="_blank" rel="noopener">ESP32 datasheet</a> · <a href="https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library" target="_blank" rel="noopener">SparkFun MAX3010x library</a></span>
+</footer>
+</div>
+
+<script>
+// Per-viewer "bought" ticks; the page works the same if storage is blocked.
+const KEY = "bbt-bom-v1";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+const boxes = [...document.querySelectorAll(".bom input[type=checkbox]")];
+const out = document.getElementById("bought");
+function update() { out.textContent = `${boxes.filter(b => b.checked).length} of ${boxes.length} ticked`; }
+boxes.forEach(b => {
+  const row = b.closest("tr");
+  b.checked = !!saved[b.id];
+  row.classList.toggle("done", b.checked);
+  b.addEventListener("change", () => {
+    saved[b.id] = b.checked;
+    row.classList.toggle("done", b.checked);
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    update();
+  });
+});
+update();
+</script>

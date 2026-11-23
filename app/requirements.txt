@@ -1,0 +1,2 @@
+# Only needed for a real ESP32. Demo mode uses Python's standard library.
+pyserial==3.5
